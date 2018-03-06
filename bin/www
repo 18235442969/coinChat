@@ -19,7 +19,17 @@ var port = normalizePort(process.env.PORT || '3000');
  * Create HTTP server.
  */
 
-var server = http.createServer(app.callback());
+var server = http.Server(app.callback()),
+    io = require('socket.io')(server);
+
+  io.on('connection', function(socket){
+    console.log(1)
+    console.log(socket)
+    socket.emit('news', { hello: 'world' });
+    socket.on('my other event', function (data) {
+      console.log(data);
+    });
+  });
 
 /**
  * Listen on provided port, on all network interfaces.
