@@ -1,12 +1,13 @@
-const Koa = require('koa')
+import Koa from "koa";
+import onerror from "koa-onerror";
+import logger from "koa-logger";
+import koaDebug from "debug";
+import http from "http";
+import socketOperation from "./controller/socket";
+import log from "./log/index";
 const app = new Koa()
-const onerror = require('koa-onerror')
-const logger = require('koa-logger')
-const debug = require('debug')('demo:server')
-const http = require('http')
-
+const debug = koaDebug('demo:server')
 const port = normalizePort(process.env.PORT || '3000');
-
 
 // error handler
 onerror(app)
@@ -35,12 +36,46 @@ app.on('error', (err, ctx) => {
 let server = http.Server(app.callback());
 let io = require('socket.io')(server);
 
+
+// 用户连接池
+let userList = [];
+
+//连接身份验证
+io.use((socket, next) => {
+  let token = socket.handshake.query.token;
+  if (token) {
+    return next();
+  }
+  const startTime = new Date();
+  log.tokenError(startTime);
+  return next(new Error('身份验证失败，请重新连接'));
+});
+
+//连接
 io.on('connection', function(socket){
-  console.log(socket.id)
-  socket.emit('news', { hello: 'world' });
-  socket.on('my other event', function (data) {
-    console.log(data);
+  const token = socket.handshake.query.token;
+  //连接回执
+  socket.emit('connected');
+  /**
+   * [保存连接的用户信息]
+   */
+  socket.on('connectNewUser', function (data) {
+    const startTime = new Date();
+    socketOperation.connectNewUser(socket, token, data, userList, startTime);
   });
+
+  /**
+   * 收到信息
+   */
+  socket.on('message', function(data){
+    const startTime = new Date();
+    socketOperation.onMessage(io, socket, data, userList, startTime);
+  })
+
+  //断线
+  socket.on('disconnect', function(reason) {
+    socketOperation.onDisconnect(socket, userList);
+  })
 });
 
 /**
