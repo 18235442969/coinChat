@@ -48,17 +48,33 @@ const onMessage = async (io, socket, data, userList, startTime) => {
   //接受者用户信息
   const receiveUserInfo = userList.find(e => e.userId == receiveUserId);
   const par = {
-    atcOrderID: data.atcOrderId,
     content: message
   };
+  //保存订单的id
+  let id;
+  //判断订单货币类型
+  switch (data.coinType) {
+    case 'atc':
+      par.atcOrderID = data.atcOrderId;
+      id = 'atcOrderID';
+      break;
+    case 'vrh':
+      par.vrhOrderID = data.vrhOrderId;
+      id = 'vrhOrderID';
+      break;
+    default:
+      par.atcOrderID = data.atcOrderId;
+      id = 'atcOrderID';
+      break;
+  }
   //发送者连接socket服务器
   if (sendUserInfo) {
     try{
-      let res = await sendMessage.sendMessage(par, sendUserInfo.token);
+      let res = await sendMessage.sendMessage(par, sendUserInfo.token, data.coinType);
       socket.emit('getMessage', res.data);
       //接受者在线
       if (receiveUserInfo) {
-        if (res.data.body.atcOrderID == receiveUserInfo.orderId) {
+        if (res.data.body[id] == receiveUserInfo.orderId) {
           const receiveSocketId = receiveUserInfo.socketId;
           const receiveSocket = io.sockets.sockets[receiveSocketId];
           receiveSocket.emit('receiveMessage', res.data);

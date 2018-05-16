@@ -25,8 +25,9 @@ const onConnectLog = (userList, user, startTime) => {
  * @param  {[type]} data [发送信息]
  */
 const sendMessageLog = (data, isSendSuccess, startTime) => {
-	const successStr = `发送成功    订单：${data.atcOrderId}    ${data.sendUserId}  向  ${data.receiveUserId}    发送：${data.message}`;
-	const failStr = `发送失败    订单：${data.atcOrderId}    ${data.sendUserId}  向  ${data.receiveUserId}    发送：${data.message}`;
+	let orderId = data.coinType == 'atc' ? data.atcOrderId : data.vrhOrderId;
+	const successStr = `发送成功    订单：${orderId}    ${data.sendUserId}  向  ${data.receiveUserId}    发送：${data.message}`;
+	const failStr = `发送失败    订单：${orderId}    ${data.sendUserId}  向  ${data.receiveUserId}    发送：${data.message}`;
 	const str = isSendSuccess ? successStr : failStr;
 	recordLog(url.messageUrl, str, startTime);
 }
