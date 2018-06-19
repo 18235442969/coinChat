@@ -12,8 +12,9 @@ const sendMessage = function(par, token, coinType) {
 		vrh: 'vrh'
 	}
 	// 网上测试
+	const baseURL = 'http://app.fctccoin.com/' + coinUrlParams[coinType];
 	// 本地发布
-	const baseURL = 'http://192.168.1.111:9000/' + coinUrlParams[coinType]
+	// const baseURL = 'http://192.168.1.111:9000/' + coinUrlParams[coinType]
 	const service = axios.create({
 	  baseURL: baseURL,
 	  timeout: 30000
